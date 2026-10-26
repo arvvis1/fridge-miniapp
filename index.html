@@ -117,22 +117,36 @@
     {name:'Макароны с курицей', ingredients:['макароны','курица','лук'], time:30, kcal:460, steps:'Отвари макароны. Обжарь кусочки курицы с луком до полной готовности и перемешай с макаронами.'}
   ];
   let products = [];
+  let localStorageFallback = false;
   const $ = (id) => document.getElementById(id);
   const normalize = (s) => String(s || '').toLocaleLowerCase('ru').replaceAll('ё','е').trim();
   function showToast(text) { const el=$('toast'); el.textContent=text; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2100); }
   function cloudGet(key) { return new Promise((resolve,reject)=>tg.CloudStorage.getItem(key,(err,value)=>err?reject(err):resolve(value||''))); }
   function cloudSet(key,value) { return new Promise((resolve,reject)=>tg.CloudStorage.setItem(key,value,(err)=>err?reject(err):resolve())); }
   async function loadProducts() {
+    let saved = '';
     try {
-      const saved = tg?.CloudStorage ? await cloudGet(STORE_KEY) : localStorage.getItem(STORE_KEY);
+      if (tg?.CloudStorage) {
+        try { saved = await cloudGet(STORE_KEY); }
+        catch { localStorageFallback = true; saved = localStorage.getItem(STORE_KEY) || ''; }
+      } else {
+        localStorageFallback = true;
+        saved = localStorage.getItem(STORE_KEY) || '';
+      }
       products = saved ? JSON.parse(saved) : [];
       if (!Array.isArray(products)) products=[];
+      if (localStorageFallback && tg?.CloudStorage) showToast('Сохранение Telegram недоступно — пока храню список на этом устройстве.');
     } catch { products=[]; showToast('Не удалось прочитать сохранённый список.'); }
   }
   async function saveProducts() {
     const value=JSON.stringify(products);
-    try { if (tg?.CloudStorage) await cloudSet(STORE_KEY,value); else localStorage.setItem(STORE_KEY,value); }
-    catch { try { localStorage.setItem(STORE_KEY,value); showToast('Сохранил список на этом устройстве.'); } catch { showToast('Не удалось сохранить список.'); } }
+    try {
+      if (tg?.CloudStorage && !localStorageFallback) await cloudSet(STORE_KEY,value);
+      else localStorage.setItem(STORE_KEY,value);
+    } catch {
+      try { localStorageFallback = true; localStorage.setItem(STORE_KEY,value); showToast('Сохранение Telegram недоступно — список хранится на этом устройстве.'); }
+      catch { showToast('Не удалось сохранить список.'); }
+    }
   }
   function ingredientPresent(needed) {
     const forms=aliases[needed]||[needed];
