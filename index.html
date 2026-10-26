@@ -173,48 +173,48 @@
     const vegetables=['tomato','onion','garlic','carrot','pepper','zucchini','eggplant','broccoli','spinach','mushroom','cabbage','peas','corn'];
     for(const base of productsOf('pasta')) {
       for(const pk of proteins) for(const p of productsOf(pk)) for(const vk of vegetables) for(const v of productsOf(vk))
-        add(`Паста с ${p.name} и ${v.name}`,[base,p,v],30,'Отвари пасту. Нарежь и приготовь продукт с белком до полной готовности, добавь овощ и немного воды от варки. Смешай с пастой и прогрей.');
+        add(`Паста: ${p.name} + ${v.name}`,[base,p,v],30,'Отвари пасту. Нарежь и приготовь продукт с белком до полной готовности, добавь овощ и немного воды от варки. Смешай с пастой и прогрей.');
       for(const pk of proteins) for(const p of productsOf(pk)) for(const sk of ['cheese','cream','pesto','tomatoSauce']) for(const s of productsOf(sk))
-        add(`Паста с ${p.name} и ${s.name}`,[base,p,s],25,'Отвари пасту. Приготовь продукт с белком до полной готовности, затем добавь указанный соус или молочный продукт и смешай с пастой.');
+        add(`Паста с соусом: ${p.name} + ${s.name}`,[base,p,s],25,'Отвари пасту. Приготовь продукт с белком до полной готовности, затем добавь указанный соус или молочный продукт и смешай с пастой.');
       for(const vk of vegetables) for(const v of productsOf(vk)) for(const sk of ['cheese','cream','pesto','tomatoSauce']) for(const s of productsOf(sk))
-        add(`Паста с ${v.name} и ${s.name}`,[base,v,s],20,'Отвари пасту. Приготовь овощ, добавь указанный соус или сыр и смешай с пастой.');
+        add(`Паста с овощами: ${v.name} + ${s.name}`,[base,v,s],20,'Отвари пасту. Приготовь овощ, добавь указанный соус или сыр и смешай с пастой.');
     }
     for(const base of productsOf('rice')) {
       for(const pk of proteins) for(const p of productsOf(pk)) for(const vk of vegetables) for(const v of productsOf(vk))
-        add(`Рис с ${p.name} и ${v.name}`,[base,p,v],35,'Свари рис. Отдельно приготовь продукт с белком до полной готовности вместе с овощем и подай с рисом.');
+        add(`Рис: ${p.name} + ${v.name}`,[base,p,v],35,'Свари рис. Отдельно приготовь продукт с белком до полной готовности вместе с овощем и подай с рисом.');
       for(const egg of productsOf('eggs')) for(const vk of vegetables) for(const v of productsOf(vk))
-        add(`Жареный рис с яйцом и ${v.name}`,[base,egg,v],20,'Свари рис заранее. Приготовь овощ, добавь яйцо и перемешай до полной готовности. Добавь рис и прогрей.');
+        add(`Рис с яйцом: ${v.name}`,[base,egg,v],20,'Свари рис заранее. Приготовь овощ, добавь яйцо и перемешай до полной готовности. Добавь рис и прогрей.');
       for(const lk of ['beans','lentils','chickpeas']) for(const legume of productsOf(lk))
-        add(`Рис с ${legume.name}`,[base,legume],25,'Свари рис. Бобовые отвари до мягкости или прогрей, если они консервированные, и подай вместе.');
+        add(`Рис и бобовые: ${legume.name}`,[base,legume],25,'Свари рис. Бобовые отвари до мягкости или прогрей, если они консервированные, и подай вместе.');
     }
     for(const base of productsOf('potato')) {
       for(const pk of proteins) for(const p of productsOf(pk)) for(const vk of vegetables) for(const v of productsOf(vk))
-        add(`Картофель с ${p.name} и ${v.name}`,[base,p,v],40,'Нарежь картофель и овощ. Приготовь вместе с продуктом с белком в духовке или под крышкой на сковороде до полной готовности.');
+        add(`Картофель: ${p.name} + ${v.name}`,[base,p,v],40,'Нарежь картофель и овощ. Приготовь вместе с продуктом с белком в духовке или под крышкой на сковороде до полной готовности.');
       for(const egg of productsOf('eggs')) add('Картофель с яйцом',[base,egg],25,'Нарежь и отвари или обжарь картофель. Добавь яйцо и доведи до полной готовности.');
-      for(const cheese of productsOf('cheese')) add(`Запечённый картофель с ${cheese.name}`,[base,cheese],40,'Запеки или отвари картофель до мягкости, добавь сыр и прогрей до расплавления.');
+      for(const cheese of productsOf('cheese')) add(`Картофель с сыром: ${cheese.name}`,[base,cheese],40,'Запеки или отвари картофель до мягкости, добавь сыр и прогрей до расплавления.');
     }
     for(const egg of productsOf('eggs')) for(const vk of vegetables) for(const v of productsOf(vk))
-      add(`Омлет с ${v.name}`,[egg,v],15,'Нарежь овощ, слегка приготовь на сковороде, залей взбитым яйцом и готовь на слабом огне до полной готовности.');
+      add(`Омлет: ${v.name}`,[egg,v],15,'Нарежь овощ, слегка приготовь на сковороде, залей взбитым яйцом и готовь на слабом огне до полной готовности.');
     for(const bread of productsOf('bread')) for(const k of ['cheese','eggs','chicken','tuna','sausage','cottage']) for(const p of productsOf(k))
-      add(`Тосты с ${p.name}`,[bread,p],12,'Подсуши хлеб. Добавь указанный продукт; яйцо или мясо сначала приготовь до полной готовности.');
+      add(`Тосты: ${p.name}`,[bread,p],12,'Подсуши хлеб. Добавь указанный продукт; яйцо или мясо сначала приготовь до полной готовности.');
     for(const lk of ['beans','lentils','chickpeas']) for(const legume of productsOf(lk)) {
       for(const tomato of productsOf('tomato')) for(const onion of productsOf('onion'))
-        add(`Тушёные ${legume.name} с томатом`,[legume,tomato,onion],25,'Бобовые отвари до мягкости или прогрей, если они консервированные. Добавь помидор и лук, потуши вместе.');
+        add(`Бобовые с овощами: ${tomato.name} + ${onion.name}`,[legume,tomato,onion],25,'Бобовые отвари до мягкости или прогрей, если они консервированные. Добавь помидор и лук, потуши вместе.');
       for(const grain of [...productsOf('rice'),...productsOf('buckwheat'),...productsOf('bulgur'),...productsOf('couscous')])
-        add(`${legume.name} с ${grain.name}`,[legume,grain],25,'Приготовь крупу по упаковке. Бобовые отвари или прогрей, если они консервированные, и подай вместе.');
+        add(`Бобовые и крупа: ${legume.name} + ${grain.name}`,[legume,grain],25,'Приготовь крупу по упаковке. Бобовые отвари или прогрей, если они консервированные, и подай вместе.');
     }
     for(const grain of [...productsOf('buckwheat'),...productsOf('bulgur'),...productsOf('couscous')]) for(const pk of proteins) for(const p of productsOf(pk))
-      add(`${grain.name} с ${p.name}`,[grain,p],30,'Приготовь крупу по упаковке. Продукт с белком приготовь отдельно до полной готовности и подай вместе.');
+      add(`Крупа и белок: ${grain.name} + ${p.name}`,[grain,p],30,'Приготовь крупу по упаковке. Продукт с белком приготовь отдельно до полной готовности и подай вместе.');
     for(const oats of productsOf('oats')) for(const milk of [...productsOf('milk'),...productsOf('yogurt')]) for(const fruit of [...productsOf('apple'),...productsOf('banana'),...productsOf('pear'),...productsOf('berries')])
-      add(`Овсянка с ${fruit.name}`,[oats,milk,fruit],10,'Свари овсянку на молоке или размешай её в йогурте. Добавь нарезанный фрукт или ягоды.');
+      add(`Овсянка: ${fruit.name}`,[oats,milk,fruit],10,'Свари овсянку на молоке или размешай её в йогурте. Добавь нарезанный фрукт или ягоды.');
     for(const cottage of productsOf('cottage')) for(const fruit of [...productsOf('apple'),...productsOf('banana'),...productsOf('pear'),...productsOf('berries')])
-      add(`${cottage.name} с ${fruit.name}`,[cottage,fruit],5,'Нарежь фрукт или добавь ягоды и смешай с творогом.');
+      add(`Творог: ${fruit.name}`,[cottage,fruit],5,'Нарежь фрукт или добавь ягоды и смешай с творогом.');
     for(const flour of productsOf('flour')) for(const egg of productsOf('eggs')) for(const dairy of [...productsOf('milk'),...productsOf('yogurt')])
-      add('Блины из того, что есть',[flour,egg,dairy],25,'Смешай муку, яйцо и молоко или йогурт с водой до теста. Жарь небольшие блины на сковороде до золотистого цвета.');
+      add(`Блины: ${dairy.name}`,[flour,egg,dairy],25,'Смешай муку, яйцо и молоко или йогурт с водой до теста. Жарь небольшие блины на сковороде до золотистого цвета.');
     const saladVeg=['tomato','cucumber','lettuce','avocado','corn','peas'];
     for(let i=0;i<saladVeg.length;i++) for(let j=i+1;j<saladVeg.length;j++) for(const v1 of productsOf(saladVeg[i])) for(const v2 of productsOf(saladVeg[j]))
       for(const extraKey of ['cheese','eggs','tuna']) for(const extra of productsOf(extraKey))
-        add(`Салат с ${v1.name}, ${v2.name} и ${extra.name}`,[v1,v2,extra],15,'Нарежь овощи. Яйцо предварительно свари, затем добавь его; остальные продукты смешай и подай.');
+        add(`Салат: ${v1.name} + ${v2.name} + ${extra.name}`,[v1,v2,extra],15,'Нарежь овощи. Яйцо предварительно свари, затем добавь его; остальные продукты смешай и подай.');
     return out;
   }
   function showToast(text) { const el=$('toast'); el.textContent=text; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2100); }
