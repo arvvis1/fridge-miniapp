@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f7f2">
+  <title>Мой холодильник</title>
+  <script src="https://telegram.org/js/telegram-web-app.js?64"></script>
+  <style>
+    :root { color-scheme: light dark; --bg:#f4f7f2; --card:#fff; --text:#17251d; --muted:#68776d; --line:#e5ece5; --green:#27784a; --green-soft:#e4f2e8; --danger:#b84242; --shadow:0 8px 24px rgba(29,60,39,.07); }
+    * { box-sizing:border-box }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(100%,620px); min-height:100dvh; margin:0 auto; padding:22px 18px calc(28px + env(safe-area-inset-bottom)); }
+    header { padding:10px 2px 20px; }
+    .eyebrow { color:var(--green); font-size:12px; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:5px 0 4px; font-size:29px; line-height:1.1; letter-spacing:-.04em; }
+    .subtitle { margin:0; color:var(--muted); font-size:14px; }
+    .tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:5px; margin:0 0 16px; border:1px solid var(--line); border-radius:15px; background:var(--card); }
+    .tab { min-height:42px; border:0; border-radius:11px; background:transparent; color:var(--muted); font:inherit; font-weight:700; cursor:pointer; }
+    .tab[aria-selected="true"] { background:var(--green-soft); color:var(--green); }
+    .panel { display:none; }
+    .panel.active { display:block; }
+    .section-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:20px 2px 10px; }
+    h2 { margin:0; font-size:18px; letter-spacing:-.02em; }
+    .count { color:var(--muted); font-size:13px; }
+    .card { border:1px solid var(--line); border-radius:16px; background:var(--card); box-shadow:var(--shadow); }
+    form.add-form { display:grid; grid-template-columns:minmax(0,1fr) 94px; gap:8px; padding:10px; }
+    input { width:100%; min-width:0; min-height:44px; padding:0 12px; border:1px solid var(--line); border-radius:11px; outline:none; background:var(--bg); color:var(--text); font:inherit; }
+    input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(39,120,74,.12); }
+    .add-row { display:flex; gap:8px; grid-column:1/-1; }
+    .primary { width:100%; min-height:45px; border:0; border-radius:12px; background:var(--green); color:#fff; font:inherit; font-weight:750; cursor:pointer; }
+    .primary:active,.remove:active,.tab:active { transform:scale(.98); }
+    .items { display:grid; gap:8px; }
+    .product { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 13px; }
+    .product-name { min-width:0; font-weight:700; overflow-wrap:anywhere; }
+    .product-meta { margin-top:2px; color:var(--muted); font-size:13px; }
+    .remove { flex:none; width:38px; height:38px; border:0; border-radius:11px; background:transparent; color:var(--danger); font-size:20px; cursor:pointer; }
+    .remove:hover { background:rgba(184,66,66,.08); }
+    .empty { padding:22px 16px; color:var(--muted); text-align:center; }
+    .empty strong { display:block; margin-bottom:4px; color:var(--text); }
+    .recipe-list { display:grid; gap:10px; }
+    details.recipe { overflow:hidden; }
+    details.recipe summary { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:15px; list-style:none; cursor:pointer; }
+    details.recipe summary::-webkit-details-marker { display:none; }
+    .recipe-name { font-weight:750; }
+    .recipe-meta { margin-top:4px; color:var(--muted); font-size:13px; }
+    .recipe-arrow { color:var(--green); font-size:20px; transition:transform .18s; }
+    details[open] .recipe-arrow { transform:rotate(180deg); }
+    .recipe-body { padding:0 15px 15px; color:var(--muted); font-size:14px; }
+    .recipe-body strong { color:var(--text); }
+    .recipe-body p { margin:8px 0 0; }
+    .notice { margin-top:16px; padding:12px 13px; border-radius:13px; background:var(--green-soft); color:var(--green); font-size:13px; }
+    .toast { position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom)); z-index:5; max-width:calc(100% - 36px); padding:10px 14px; border-radius:12px; background:#17251d; color:white; opacity:0; transform:translate(-50%,12px); transition:.2s; pointer-events:none; }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    @media (prefers-color-scheme:dark) { :root { --bg:#111a14; --card:#1a261e; --text:#edf5ee; --muted:#a4b2a7; --line:#2c3a30; --green:#86d39e; --green-soft:#21392a; --shadow:none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">помощник на кухне</div>
+      <h1>Мой холодильник</h1>
+      <p class="subtitle">Добавляй продукты — я подберу блюда из того, что уже есть.</p>
+    </header>
+    <nav class="tabs" aria-label="Разделы">
+      <button class="tab" type="button" data-tab="fridge" aria-selected="true">🥬 Продукты</button>
+      <button class="tab" type="button" data-tab="recipes" aria-selected="false">🍳 Блюда</button>
+    </nav>
+    <section class="panel active" id="fridge-panel" aria-labelledby="fridge-title">
+      <div class="section-title"><h2 id="fridge-title">В холодильнике</h2><span class="count" id="product-count">0 продуктов</span></div>
+      <form class="add-form card" id="add-form">
+        <input id="product-name" type="text" maxlength="50" placeholder="Например, помидоры" aria-label="Название продукта" required>
+        <input id="product-amount" type="text" maxlength="30" placeholder="Количество" aria-label="Количество продукта">
+        <div class="add-row"><button class="primary" type="submit">＋ Добавить продукт</button></div>
+      </form>
+      <div class="items" id="product-list" aria-live="polite" style="margin-top:10px"></div>
+      <div class="notice">Список сохраняется в Telegram Cloud Storage для этого бота. Бот-токен приложению не нужен.</div>
+    </section>
+    <section class="panel" id="recipes-panel" aria-labelledby="recipes-title">
+      <div class="section-title"><h2 id="recipes-title">Можно приготовить</h2><span class="count" id="recipe-count">0 блюд</span></div>
+      <div class="recipe-list" id="recipe-list" aria-live="polite"></div>
+      <div class="notice">Здесь только блюда, для которых все основные продукты уже есть в списке. Калорийность примерная.</div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+  const tg = window.Telegram?.WebApp;
+  const STORE_KEY = 'fridge_inventory_v1';
+  const calories = { 'яйца':143,'картофель':77,'помидоры':18,'сыр':350,'молоко':60,'курица':165,'рис':130,'макароны':157,'лук':40,'морковь':41,'огурец':15,'хлеб':265,'творог':121,'банан':89,'яблоко':52,'фарш':250,'песто':460 };
+  const aliases = {
+    'яйца':['яйцо','яйца'], 'картофель':['картофель','картошка'],
+    'помидоры':['помидор','помидоры'], 'курица':['курица','куриное филе'],
+    'макароны':['макароны','паста','спагетти'], 'фарш':['фарш','мясной фарш'],
+    'песто':['песто','соус песто'], 'сыр':['сыр'], 'молоко':['молоко'],
+    'рис':['рис'], 'лук':['лук'], 'морковь':['морковь'], 'огурец':['огурец'],
+    'хлеб':['хлеб'], 'творог':['творог'], 'банан':['банан'], 'яблоко':['яблоко']
+  };
+  const recipes = [
+    {name:'Макароны с фаршем и песто', ingredients:['макароны','фарш','песто'], time:30, kcal:650, steps:'Отвари макароны. Обжарь фарш на сковороде до полной готовности. Слей воду, добавь песто и фарш к макаронам и перемешай.'},
+    {name:'Макароны с фаршем', ingredients:['макароны','фарш'], time:25, kcal:560, steps:'Отвари макароны. Обжарь фарш до полной готовности, затем смешай с макаронами. По желанию добавь соль и перец.'},
+    {name:'Макароны с песто', ingredients:['макароны','песто'], time:15, kcal:520, steps:'Отвари макароны. Слей воду, оставив немного воды от варки. Перемешай макароны с песто; добавь немного воды, если соус густой.'},
+    {name:'Шакшука по-простому', ingredients:['яйца','помидоры','лук'], time:20, kcal:250, steps:'Нарежь лук и помидоры, потуши до мягкости. Сделай в смеси углубления, разбей яйца и готовь под крышкой до желаемой степени.'},
+    {name:'Жареный рис с яйцом', ingredients:['рис','яйца','морковь','лук'], time:20, kcal:320, steps:'Свари рис. Обжарь нарезанные лук и морковь, добавь яйцо и перемешай. Выложи рис и прогрей всё вместе.'},
+    {name:'Курица с картофелем', ingredients:['курица','картофель','лук'], time:40, kcal:390, steps:'Нарежь курицу и картофель. Обжарь курицу с луком, добавь картофель и немного воды. Туши под крышкой до готовности.'},
+    {name:'Омлет с помидорами', ingredients:['яйца','помидоры'], time:10, kcal:220, steps:'Нарежь помидоры и слегка прогрей их на сковороде. Добавь взбитые яйца и готовь на небольшом огне до схватывания.'},
+    {name:'Картофель с яйцом', ingredients:['картофель','яйца'], time:25, kcal:300, steps:'Отвари или обжарь нарезанный картофель. Добавь яйца и доведи до готовности.'},
+    {name:'Курица с рисом', ingredients:['курица','рис'], time:35, kcal:430, steps:'Свари рис. Кусочки курицы обжарь или потуши до полной готовности и подай с рисом.'},
+    {name:'Макароны с сыром', ingredients:['макароны','сыр'], time:20, kcal:390, steps:'Отвари макароны. Слей воду, добавь тёртый сыр и немного воды от варки, перемешай до расплавления сыра.'},
+    {name:'Овощной салат', ingredients:['помидоры','огурец','лук'], time:10, kcal:100, steps:'Нарежь овощи, смешай и добавь заправку, если она есть.'},
+    {name:'Банан с творогом', ingredients:['банан','творог'], time:5, kcal:230, steps:'Нарежь банан и смешай с творогом.'},
+    {name:'Суп из картофеля и моркови', ingredients:['картофель','морковь','лук'], time:30, kcal:170, steps:'Нарежь овощи, залей водой и вари до мягкости. Посоли по вкусу, если есть соль.'},
+    {name:'Рисовая каша на молоке', ingredients:['рис','молоко'], time:30, kcal:260, steps:'Вари рис в воде до почти готового состояния. Добавь молоко и довари на слабом огне, помешивая.'},
+    {name:'Запечённый картофель с сыром', ingredients:['картофель','сыр'], time:40, kcal:340, steps:'Запеки картофель до мягкости, разрежь и добавь сыр. Верни в духовку на несколько минут, пока сыр не расплавится.'},
+    {name:'Салат с яйцом и огурцом', ingredients:['яйца','огурец','помидоры'], time:15, kcal:180, steps:'Свари яйца вкрутую. Нарежь их с овощами и смешай.'},
+    {name:'Творог с яблоком', ingredients:['творог','яблоко'], time:5, kcal:190, steps:'Нарежь яблоко и смешай с творогом.'},
+    {name:'Макароны с курицей', ingredients:['макароны','курица','лук'], time:30, kcal:460, steps:'Отвари макароны. Обжарь кусочки курицы с луком до полной готовности и перемешай с макаронами.'}
+  ];
+  let products = [];
+  const $ = (id) => document.getElementById(id);
+  const normalize = (s) => String(s || '').toLocaleLowerCase('ru').replaceAll('ё','е').trim();
+  function showToast(text) { const el=$('toast'); el.textContent=text; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2100); }
+  function cloudGet(key) { return new Promise((resolve,reject)=>tg.CloudStorage.getItem(key,(err,value)=>err?reject(err):resolve(value||''))); }
+  function cloudSet(key,value) { return new Promise((resolve,reject)=>tg.CloudStorage.setItem(key,value,(err)=>err?reject(err):resolve())); }
+  async function loadProducts() {
+    try {
+      const saved = tg?.CloudStorage ? await cloudGet(STORE_KEY) : localStorage.getItem(STORE_KEY);
+      products = saved ? JSON.parse(saved) : [];
+      if (!Array.isArray(products)) products=[];
+    } catch { products=[]; showToast('Не удалось прочитать сохранённый список.'); }
+  }
+  async function saveProducts() {
+    const value=JSON.stringify(products);
+    try { if (tg?.CloudStorage) await cloudSet(STORE_KEY,value); else localStorage.setItem(STORE_KEY,value); }
+    catch { try { localStorage.setItem(STORE_KEY,value); showToast('Сохранил список на этом устройстве.'); } catch { showToast('Не удалось сохранить список.'); } }
+  }
+  function ingredientPresent(needed) {
+    const forms=aliases[needed]||[needed];
+    return products.some(p=>forms.some(form=>normalize(p.name).includes(form)||form.includes(normalize(p.name))));
+  }
+  function calorieFor(name) {
+    const n=normalize(name);
+    const key=Object.keys(calories).find(k=>n===k || n.includes(k) || (aliases[k]||[]).some(a=>n.includes(a)));
+    return key ? calories[key] : null;
+  }
+  function renderProducts() {
+    $('product-count').textContent=`${products.length} ${products.length===1?'продукт':'продукта'}`;
+    const list=$('product-list'); list.replaceChildren();
+    if (!products.length) { const empty=document.createElement('div'); empty.className='empty card'; empty.innerHTML='<strong>Пока пусто</strong>Добавь первый продукт в холодильник.'; list.append(empty); return; }
+    products.forEach((p,index)=>{
+      const row=document.createElement('article'); row.className='product card';
+      const info=document.createElement('div'); const name=document.createElement('div'); name.className='product-name'; name.textContent=p.name;
+      const meta=document.createElement('div'); meta.className='product-meta'; const kcal=calorieFor(p.name); meta.textContent=[p.amount||'количество не указано',kcal?`${kcal} ккал на 100 г`:null].filter(Boolean).join(' · '); info.append(name,meta);
+      const remove=document.createElement('button'); remove.className='remove'; remove.type='button'; remove.setAttribute('aria-label',`Удалить ${p.name}`); remove.textContent='×'; remove.addEventListener('click',async()=>{products.splice(index,1);await saveProducts();render();showToast('Продукт удалён');});
+      row.append(info,remove); list.append(row);
+    });
+  }
+  function renderRecipes() {
+    const matching=recipes.filter(r=>r.ingredients.every(ingredientPresent));
+    $('recipe-count').textContent=`${matching.length} ${matching.length===1?'блюдо':'блюд'}`;
+    const list=$('recipe-list'); list.replaceChildren();
+    if (!matching.length) { const empty=document.createElement('div'); empty.className='empty card'; empty.innerHTML='<strong>Пока нет подходящих блюд</strong>Добавь продукты — покажу рецепты, в которых всё нужное уже есть.'; list.append(empty); return; }
+    matching.forEach(r=>{
+      const card=document.createElement('details'); card.className='recipe card';
+      const summary=document.createElement('summary');
+      const info=document.createElement('div'); const title=document.createElement('div'); title.className='recipe-name'; title.textContent=r.name; const meta=document.createElement('div'); meta.className='recipe-meta'; meta.textContent=`${r.time} мин · около ${r.kcal} ккал на порцию`; info.append(title,meta);
+      const arrow=document.createElement('span'); arrow.className='recipe-arrow'; arrow.setAttribute('aria-hidden','true'); arrow.textContent='⌄'; summary.append(info,arrow);
+      const body=document.createElement('div'); body.className='recipe-body'; const ingredients=document.createElement('p'); const bold=document.createElement('strong'); bold.textContent='Продукты: '; ingredients.append(bold,document.createTextNode(r.ingredients.join(', '))); const steps=document.createElement('p'); const label=document.createElement('strong'); label.textContent='Как приготовить: '; steps.append(label,document.createTextNode(r.steps)); body.append(ingredients,steps); card.append(summary,body); list.append(card);
+    });
+  }
+  function render() { renderProducts(); renderRecipes(); }
+  document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b===button)));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===`${button.dataset.tab}-panel`));
+  }));
+  $('add-form').addEventListener('submit',async(event)=>{
+    event.preventDefault(); const name=$('product-name').value.trim(); const amount=$('product-amount').value.trim(); if(!name)return;
+    const existing=products.find(p=>normalize(p.name)===normalize(name));
+    if(existing) existing.amount=amount||existing.amount; else products.unshift({name,amount});
+    await saveProducts(); render(); $('add-form').reset(); $('product-name').focus(); showToast(existing?'Количество обновлено':'Продукт добавлен');
+  });
+  function applyTelegramTheme() {
+    if(!tg?.themeParams)return; const p=tg.themeParams; const root=document.documentElement;
+    if(p.bg_color)root.style.setProperty('--bg',p.bg_color); if(p.secondary_bg_color)root.style.setProperty('--card',p.secondary_bg_color);
+    if(p.text_color)root.style.setProperty('--text',p.text_color); if(p.hint_color)root.style.setProperty('--muted',p.hint_color);
+    if(p.button_color)root.style.setProperty('--green',p.button_color); if(p.button_text_color)root.style.setProperty('--button-text',p.button_text_color);
+    document.querySelectorAll('.primary').forEach(b=>{if(p.button_color)b.style.background=p.button_color;if(p.button_text_color)b.style.color=p.button_text_color;});
+  }
+  if(tg){tg.ready();tg.expand();applyTelegramTheme();tg.onEvent('themeChanged',applyTelegramTheme);}
+  loadProducts().then(render);
+})();
+</script>
+</body>
+</html>
