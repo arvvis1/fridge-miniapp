@@ -1,0 +1,3 @@
+const{verifyInitData,readInventory,writeInventory,cleanItems}=require('./_shared');
+module.exports=async(req,res)=>{res.setHeader('Cache-Control','no-store');if(!['GET','PUT'].includes(req.method))return res.status(405).json({error:'Method not allowed'});try{const id=verifyInitData(req.headers['x-telegram-init-data']);if(req.method==='GET')return res.status(200).json({items:await readInventory(id)});await writeInventory(id,cleanItems(req.body?.items));return res.status(200).json({ok:true})}catch(e){const auth=/authorization|signature|telegram data|user id/i.test(e.message);return res.status(auth?401:500).json({error:auth?e.message:'Database is not configured correctly'})}};
+
