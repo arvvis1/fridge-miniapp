@@ -153,7 +153,7 @@
   let localStorageFallback = false;
   const $ = (id) => document.getElementById(id);
   const normalize = (s) => String(s || '').toLocaleLowerCase('ru').replaceAll('ё','е').trim();
-  function typeOf(name) { const n=normalize(name); if(n.includes('томат')&&n.includes('паст'))return productTypes.find(t=>t.key==='tomatoSauce'); return productTypes.find(t=>t.aliases.some(a=>n.includes(normalize(a))))||null; }
+  function typeOf(name) { const n=normalize(name); if((n.includes('томат')&&n.includes('паст'))||(n.includes('томат')&&n.includes('соус')))return productTypes.find(t=>t.key==='tomatoSauce'); return productTypes.find(t=>t.aliases.some(a=>n.includes(normalize(a))))||null; }
   function productsOf(type) { return products.filter(p=>typeOf(p.name)?.key===type); }
   function makeDynamic(name,items,time,steps) {
     const unique=[...new Map(items.filter(Boolean).map(p=>[normalize(p.name),p])).values()];
