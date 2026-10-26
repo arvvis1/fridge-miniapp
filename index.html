@@ -49,6 +49,7 @@
     .recipe-body { padding:0 15px 15px; color:var(--muted); font-size:14px; }
     .recipe-body strong { color:var(--text); }
     .recipe-body p { margin:8px 0 0; }
+    .more-button { margin-top:12px; }
     .notice { margin-top:16px; padding:12px 13px; border-radius:13px; background:var(--green-soft); color:var(--green); font-size:13px; }
     .toast { position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom)); z-index:5; max-width:calc(100% - 36px); padding:10px 14px; border-radius:12px; background:#17251d; color:white; opacity:0; transform:translate(-50%,12px); transition:.2s; pointer-events:none; }
     .toast.show { opacity:1; transform:translate(-50%,0); }
@@ -79,7 +80,9 @@
     <section class="panel" id="recipes-panel" aria-labelledby="recipes-title">
       <div class="section-title"><h2 id="recipes-title">Можно приготовить</h2><span class="count" id="recipe-count">0 блюд</span></div>
       <div class="recipe-list" id="recipe-list" aria-live="polite"></div>
-      <div class="notice">Здесь только блюда, для которых все основные продукты уже есть в списке. Калорийность примерная.</div>
+      <button class="primary more-button" id="more-recipes" type="button" hidden>Показать ещё варианты</button>
+      <div class="notice" id="unrecognized-note" hidden></div>
+      <div class="notice">Варианты составляются из добавленных продуктов. Вода и базовые приправы могут понадобиться, но продукты для покупки я не добавляю. Калорийность примерная.</div>
     </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -96,6 +99,35 @@
     'рис':['рис'], 'лук':['лук'], 'морковь':['морковь'], 'огурец':['огурец'],
     'хлеб':['хлеб'], 'творог':['творог'], 'банан':['банан'], 'яблоко':['яблоко']
   };
+  const productTypes = [
+    {key:'pasta',aliases:['макарон','паст','спагет','лапш','вермишел'],kcal:350,portion:75},
+    {key:'rice',aliases:['рис'],kcal:360,portion:75}, {key:'potato',aliases:['картоф','картош'],kcal:77,portion:200},
+    {key:'bread',aliases:['хлеб','тост','лаваш','пита','тортиль'],kcal:265,portion:60},
+    {key:'chicken',aliases:['куриц','индейк'],kcal:165,portion:130}, {key:'beef',aliases:['говядин'],kcal:250,portion:120},
+    {key:'pork',aliases:['свинин'],kcal:242,portion:120}, {key:'mince',aliases:['фарш'],kcal:250,portion:120},
+    {key:'fish',aliases:['рыб','лосос','семг','треск'],kcal:160,portion:130}, {key:'tuna',aliases:['тун'],kcal:132,portion:100},
+    {key:'seafood',aliases:['кревет','морепродукт','кальмар'],kcal:100,portion:100},
+    {key:'sausage',aliases:['колбас','сосиск','бекон','ветчин'],kcal:300,portion:70}, {key:'eggs',aliases:['яйц'],kcal:143,portion:100},
+    {key:'tofu',aliases:['тофу'],kcal:76,portion:120}, {key:'beans',aliases:['фасол','боб'],kcal:127,portion:100},
+    {key:'lentils',aliases:['чечевиц'],kcal:116,portion:100}, {key:'chickpeas',aliases:['нут'],kcal:164,portion:100},
+    {key:'tomato',aliases:['помидор','томат'],kcal:18,portion:100}, {key:'onion',aliases:['лук'],kcal:40,portion:40},
+    {key:'garlic',aliases:['чеснок'],kcal:149,portion:5}, {key:'carrot',aliases:['морков'],kcal:41,portion:60},
+    {key:'pepper',aliases:['перец болгар','болгарский перец','сладкий перец'],kcal:31,portion:70},
+    {key:'cucumber',aliases:['огур'],kcal:15,portion:80}, {key:'zucchini',aliases:['кабач','цуккин'],kcal:17,portion:100},
+    {key:'eggplant',aliases:['баклаж'],kcal:25,portion:100}, {key:'broccoli',aliases:['брокколи'],kcal:34,portion:100},
+    {key:'spinach',aliases:['шпинат'],kcal:23,portion:50}, {key:'mushroom',aliases:['гриб','шампиньон'],kcal:22,portion:80},
+    {key:'cabbage',aliases:['капуст'],kcal:25,portion:100}, {key:'peas',aliases:['горошек','горош'],kcal:81,portion:60},
+    {key:'corn',aliases:['кукуруз'],kcal:86,portion:60}, {key:'lettuce',aliases:['салат лист','листья салата','руккол'],kcal:20,portion:40},
+    {key:'avocado',aliases:['авокад'],kcal:160,portion:50}, {key:'cheese',aliases:['сыр','моцарел','фета','пармезан'],kcal:350,portion:30},
+    {key:'cream',aliases:['сливк'],kcal:206,portion:40}, {key:'milk',aliases:['молок'],kcal:60,portion:100},
+    {key:'cottage',aliases:['творог'],kcal:121,portion:100}, {key:'sourcream',aliases:['сметан'],kcal:206,portion:25},
+    {key:'yogurt',aliases:['йогурт'],kcal:60,portion:100}, {key:'flour',aliases:['мука'],kcal:364,portion:50},
+    {key:'oats',aliases:['овсян','овес','геркул'],kcal:389,portion:50}, {key:'buckwheat',aliases:['греч'],kcal:343,portion:75},
+    {key:'bulgur',aliases:['булгур'],kcal:342,portion:75}, {key:'couscous',aliases:['кускус'],kcal:376,portion:75},
+    {key:'apple',aliases:['яблок'],kcal:52,portion:100}, {key:'banana',aliases:['банан'],kcal:89,portion:100},
+    {key:'pear',aliases:['груш'],kcal:57,portion:100}, {key:'berries',aliases:['ягод','клубник','черник','малин'],kcal:50,portion:80},
+    {key:'pesto',aliases:['песто'],kcal:460,portion:20}, {key:'tomatoSauce',aliases:['томатный соус','соус томат'],kcal:80,portion:50}
+  ];
   const recipes = [
     {name:'Макароны с фаршем и песто', ingredients:['макароны','фарш','песто'], time:30, kcal:650, steps:'Отвари макароны. Обжарь фарш на сковороде до полной готовности. Слей воду, добавь песто и фарш к макаронам и перемешай.'},
     {name:'Макароны с фаршем', ingredients:['макароны','фарш'], time:25, kcal:560, steps:'Отвари макароны. Обжарь фарш до полной готовности, затем смешай с макаронами. По желанию добавь соль и перец.'},
@@ -117,9 +149,74 @@
     {name:'Макароны с курицей', ingredients:['макароны','курица','лук'], time:30, kcal:460, steps:'Отвари макароны. Обжарь кусочки курицы с луком до полной готовности и перемешай с макаронами.'}
   ];
   let products = [];
+  let recipeOffset = 0;
   let localStorageFallback = false;
   const $ = (id) => document.getElementById(id);
   const normalize = (s) => String(s || '').toLocaleLowerCase('ru').replaceAll('ё','е').trim();
+  function typeOf(name) { const n=normalize(name); if(n.includes('томатная паст'))return productTypes.find(t=>t.key==='tomatoSauce'); return productTypes.find(t=>t.aliases.some(a=>n.includes(normalize(a))))||null; }
+  function productsOf(type) { return products.filter(p=>typeOf(p.name)?.key===type); }
+  function makeDynamic(name,items,time,steps) {
+    const unique=[...new Map(items.filter(Boolean).map(p=>[normalize(p.name),p])).values()];
+    if(unique.length<2)return null;
+    const kcal=Math.round(unique.reduce((sum,p)=>{const t=typeOf(p.name);return sum+(t?t.kcal*t.portion/100:0);},0));
+    return {name,ingredients:unique.map(p=>p.name),time,kcal,steps,types:unique.map(p=>typeOf(p.name)?.key||'').sort().join('|')};
+  }
+  function dynamicRecipes() {
+    const out=[],seen=new Set(),familyCounts={},add=(name,items,time,steps)=>{
+      if(out.length>=200)return;
+      const family=name.split(' ')[0]; if((familyCounts[family]||0)>=16)return;
+      const r=makeDynamic(name,items,time,steps); if(!r)return;
+      const key=`${r.name}|${r.ingredients.map(normalize).sort().join('|')}`;
+      if(!seen.has(key)){seen.add(key);familyCounts[family]=(familyCounts[family]||0)+1;out.push(r);}
+    };
+    const proteins=['chicken','beef','pork','mince','fish','tuna','seafood','sausage','tofu'];
+    const vegetables=['tomato','onion','garlic','carrot','pepper','zucchini','eggplant','broccoli','spinach','mushroom','cabbage','peas','corn'];
+    for(const base of productsOf('pasta')) {
+      for(const pk of proteins) for(const p of productsOf(pk)) for(const vk of vegetables) for(const v of productsOf(vk))
+        add(`Паста с ${p.name} и ${v.name}`,[base,p,v],30,'Отвари пасту. Нарежь и приготовь продукт с белком до полной готовности, добавь овощ и немного воды от варки. Смешай с пастой и прогрей.');
+      for(const pk of proteins) for(const p of productsOf(pk)) for(const sk of ['cheese','cream','pesto','tomatoSauce']) for(const s of productsOf(sk))
+        add(`Паста с ${p.name} и ${s.name}`,[base,p,s],25,'Отвари пасту. Приготовь продукт с белком до полной готовности, затем добавь указанный соус или молочный продукт и смешай с пастой.');
+      for(const vk of vegetables) for(const v of productsOf(vk)) for(const sk of ['cheese','cream','pesto','tomatoSauce']) for(const s of productsOf(sk))
+        add(`Паста с ${v.name} и ${s.name}`,[base,v,s],20,'Отвари пасту. Приготовь овощ, добавь указанный соус или сыр и смешай с пастой.');
+    }
+    for(const base of productsOf('rice')) {
+      for(const pk of proteins) for(const p of productsOf(pk)) for(const vk of vegetables) for(const v of productsOf(vk))
+        add(`Рис с ${p.name} и ${v.name}`,[base,p,v],35,'Свари рис. Отдельно приготовь продукт с белком до полной готовности вместе с овощем и подай с рисом.');
+      for(const egg of productsOf('eggs')) for(const vk of vegetables) for(const v of productsOf(vk))
+        add(`Жареный рис с яйцом и ${v.name}`,[base,egg,v],20,'Свари рис заранее. Приготовь овощ, добавь яйцо и перемешай до полной готовности. Добавь рис и прогрей.');
+      for(const lk of ['beans','lentils','chickpeas']) for(const legume of productsOf(lk))
+        add(`Рис с ${legume.name}`,[base,legume],25,'Свари рис. Бобовые отвари до мягкости или прогрей, если они консервированные, и подай вместе.');
+    }
+    for(const base of productsOf('potato')) {
+      for(const pk of proteins) for(const p of productsOf(pk)) for(const vk of vegetables) for(const v of productsOf(vk))
+        add(`Картофель с ${p.name} и ${v.name}`,[base,p,v],40,'Нарежь картофель и овощ. Приготовь вместе с продуктом с белком в духовке или под крышкой на сковороде до полной готовности.');
+      for(const egg of productsOf('eggs')) add('Картофель с яйцом',[base,egg],25,'Нарежь и отвари или обжарь картофель. Добавь яйцо и доведи до полной готовности.');
+      for(const cheese of productsOf('cheese')) add(`Запечённый картофель с ${cheese.name}`,[base,cheese],40,'Запеки или отвари картофель до мягкости, добавь сыр и прогрей до расплавления.');
+    }
+    for(const egg of productsOf('eggs')) for(const vk of vegetables) for(const v of productsOf(vk))
+      add(`Омлет с ${v.name}`,[egg,v],15,'Нарежь овощ, слегка приготовь на сковороде, залей взбитым яйцом и готовь на слабом огне до полной готовности.');
+    for(const bread of productsOf('bread')) for(const k of ['cheese','eggs','chicken','tuna','sausage','cottage']) for(const p of productsOf(k))
+      add(`Тосты с ${p.name}`,[bread,p],12,'Подсуши хлеб. Добавь указанный продукт; яйцо или мясо сначала приготовь до полной готовности.');
+    for(const lk of ['beans','lentils','chickpeas']) for(const legume of productsOf(lk)) {
+      for(const tomato of productsOf('tomato')) for(const onion of productsOf('onion'))
+        add(`Тушёные ${legume.name} с томатом`,[legume,tomato,onion],25,'Бобовые отвари до мягкости или прогрей, если они консервированные. Добавь помидор и лук, потуши вместе.');
+      for(const grain of [...productsOf('rice'),...productsOf('buckwheat'),...productsOf('bulgur'),...productsOf('couscous')])
+        add(`${legume.name} с ${grain.name}`,[legume,grain],25,'Приготовь крупу по упаковке. Бобовые отвари или прогрей, если они консервированные, и подай вместе.');
+    }
+    for(const grain of [...productsOf('buckwheat'),...productsOf('bulgur'),...productsOf('couscous')]) for(const pk of proteins) for(const p of productsOf(pk))
+      add(`${grain.name} с ${p.name}`,[grain,p],30,'Приготовь крупу по упаковке. Продукт с белком приготовь отдельно до полной готовности и подай вместе.');
+    for(const oats of productsOf('oats')) for(const milk of [...productsOf('milk'),...productsOf('yogurt')]) for(const fruit of [...productsOf('apple'),...productsOf('banana'),...productsOf('pear'),...productsOf('berries')])
+      add(`Овсянка с ${fruit.name}`,[oats,milk,fruit],10,'Свари овсянку на молоке или размешай её в йогурте. Добавь нарезанный фрукт или ягоды.');
+    for(const cottage of productsOf('cottage')) for(const fruit of [...productsOf('apple'),...productsOf('banana'),...productsOf('pear'),...productsOf('berries')])
+      add(`${cottage.name} с ${fruit.name}`,[cottage,fruit],5,'Нарежь фрукт или добавь ягоды и смешай с творогом.');
+    for(const flour of productsOf('flour')) for(const egg of productsOf('eggs')) for(const dairy of [...productsOf('milk'),...productsOf('yogurt')])
+      add('Блины из того, что есть',[flour,egg,dairy],25,'Смешай муку, яйцо и молоко или йогурт с водой до теста. Жарь небольшие блины на сковороде до золотистого цвета.');
+    const saladVeg=['tomato','cucumber','lettuce','avocado','corn','peas'];
+    for(let i=0;i<saladVeg.length;i++) for(let j=i+1;j<saladVeg.length;j++) for(const v1 of productsOf(saladVeg[i])) for(const v2 of productsOf(saladVeg[j]))
+      for(const extraKey of ['cheese','eggs','tuna']) for(const extra of productsOf(extraKey))
+        add(`Салат с ${v1.name}, ${v2.name} и ${extra.name}`,[v1,v2,extra],15,'Нарежь овощи. Яйцо предварительно свари, затем добавь его; остальные продукты смешай и подай.');
+    return out;
+  }
   function showToast(text) { const el=$('toast'); el.textContent=text; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2100); }
   function cloudGet(key) { return new Promise((resolve,reject)=>tg.CloudStorage.getItem(key,(err,value)=>err?reject(err):resolve(value||''))); }
   function cloudSet(key,value) { return new Promise((resolve,reject)=>tg.CloudStorage.setItem(key,value,(err)=>err?reject(err):resolve())); }
@@ -155,7 +252,7 @@
   function calorieFor(name) {
     const n=normalize(name);
     const key=Object.keys(calories).find(k=>n===k || n.includes(k) || (aliases[k]||[]).some(a=>n.includes(a)));
-    return key ? calories[key] : null;
+    return key ? calories[key] : (typeOf(name)?.kcal || null);
   }
   function renderProducts() {
     $('product-count').textContent=`${products.length} ${products.length===1?'продукт':'продукта'}`;
@@ -165,22 +262,30 @@
       const row=document.createElement('article'); row.className='product card';
       const info=document.createElement('div'); const name=document.createElement('div'); name.className='product-name'; name.textContent=p.name;
       const meta=document.createElement('div'); meta.className='product-meta'; const kcal=calorieFor(p.name); meta.textContent=[p.amount||'количество не указано',kcal?`${kcal} ккал на 100 г`:null].filter(Boolean).join(' · '); info.append(name,meta);
-      const remove=document.createElement('button'); remove.className='remove'; remove.type='button'; remove.setAttribute('aria-label',`Удалить ${p.name}`); remove.textContent='×'; remove.addEventListener('click',async()=>{products.splice(index,1);await saveProducts();render();showToast('Продукт удалён');});
+      const remove=document.createElement('button'); remove.className='remove'; remove.type='button'; remove.setAttribute('aria-label',`Удалить ${p.name}`); remove.textContent='×'; remove.addEventListener('click',async()=>{products.splice(index,1);recipeOffset=0;await saveProducts();render();showToast('Продукт удалён');});
       row.append(info,remove); list.append(row);
     });
   }
   function renderRecipes() {
-    const matching=recipes.filter(r=>r.ingredients.every(ingredientPresent));
+    const fixed=recipes.filter(r=>r.ingredients.every(ingredientPresent));
+    const fixedKeys=new Set(fixed.map(r=>r.ingredients.map(k=>typeOf(k)?.key||k).sort().join('|')));
+    const generated=dynamicRecipes().filter(r=>!fixedKeys.has(r.types));
+    const matching=[...fixed,...generated];
     $('recipe-count').textContent=`${matching.length} ${matching.length===1?'блюдо':'блюд'}`;
     const list=$('recipe-list'); list.replaceChildren();
-    if (!matching.length) { const empty=document.createElement('div'); empty.className='empty card'; empty.innerHTML='<strong>Пока нет подходящих блюд</strong>Добавь продукты — покажу рецепты, в которых всё нужное уже есть.'; list.append(empty); return; }
-    matching.forEach(r=>{
+    const unknown=products.filter(p=>!typeOf(p.name)).map(p=>p.name);
+    const unknownNote=$('unrecognized-note'); unknownNote.hidden=!unknown.length;
+    unknownNote.textContent=unknown.length?`Не распознаны для подбора: ${unknown.join(', ')}. Попробуй обычное название продукта, например «куриное филе» или «шампиньоны».`:'';
+    if (!matching.length) { const empty=document.createElement('div'); empty.className='empty card'; empty.innerHTML='<strong>Пока нет подходящих блюд</strong>Добавь совместимые продукты, например крупу с овощами или яйца с овощами.'; list.append(empty); $('more-recipes').hidden=true; return; }
+    const shown=matching.slice(recipeOffset,recipeOffset+12);
+    shown.forEach(r=>{
       const card=document.createElement('details'); card.className='recipe card';
       const summary=document.createElement('summary');
       const info=document.createElement('div'); const title=document.createElement('div'); title.className='recipe-name'; title.textContent=r.name; const meta=document.createElement('div'); meta.className='recipe-meta'; meta.textContent=`${r.time} мин · около ${r.kcal} ккал на порцию`; info.append(title,meta);
       const arrow=document.createElement('span'); arrow.className='recipe-arrow'; arrow.setAttribute('aria-hidden','true'); arrow.textContent='⌄'; summary.append(info,arrow);
       const body=document.createElement('div'); body.className='recipe-body'; const ingredients=document.createElement('p'); const bold=document.createElement('strong'); bold.textContent='Продукты: '; ingredients.append(bold,document.createTextNode(r.ingredients.join(', '))); const steps=document.createElement('p'); const label=document.createElement('strong'); label.textContent='Как приготовить: '; steps.append(label,document.createTextNode(r.steps)); body.append(ingredients,steps); card.append(summary,body); list.append(card);
     });
+    $('more-recipes').hidden=recipeOffset+shown.length>=matching.length;
   }
   function render() { renderProducts(); renderRecipes(); }
   document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{
@@ -191,8 +296,9 @@
     event.preventDefault(); const name=$('product-name').value.trim(); const amount=$('product-amount').value.trim(); if(!name)return;
     const existing=products.find(p=>normalize(p.name)===normalize(name));
     if(existing) existing.amount=amount||existing.amount; else products.unshift({name,amount});
-    await saveProducts(); render(); $('add-form').reset(); $('product-name').focus(); showToast(existing?'Количество обновлено':'Продукт добавлен');
+    recipeOffset=0; await saveProducts(); render(); $('add-form').reset(); $('product-name').focus(); showToast(existing?'Количество обновлено':'Продукт добавлен');
   });
+  $('more-recipes').addEventListener('click',()=>{recipeOffset+=12;renderRecipes();});
   function applyTelegramTheme() {
     if(!tg?.themeParams)return; const p=tg.themeParams; const root=document.documentElement;
     if(p.bg_color)root.style.setProperty('--bg',p.bg_color); if(p.secondary_bg_color)root.style.setProperty('--card',p.secondary_bg_color);
